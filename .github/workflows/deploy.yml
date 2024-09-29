@@ -1,59 +1,51 @@
-
 name: Deploy microservice
 
 on:
-  #
   # Deploys the microservice on push to the main branch of this code repository.
-  #
   push: 
     branches:
       - main
 
-  #
   # Allows deployment to be invoked manually through the GitHub Actions user interface.
-  #
   workflow_dispatch: 
 
 jobs:
-
   deploy:
     runs-on: ubuntu-latest
     
     env:
-      VERSION: ${{ github.sha }}
-      CONTAINER_REGISTRY: ${{ secrets.CONTAINER_REGISTRY }}
-      REGISTRY_UN: ${{ secrets.REGISTRY_UN }}
-      REGISTRY_PW: ${{ secrets.REGISTRY_PW  }}
+      VERSION: ${{ github.sha }}  # Set version to the current commit SHA
+      CONTAINER_REGISTRY: ${{ secrets.CONTAINER_REGISTRY }}  # Your container registry
+      REGISTRY_UN: ${{ secrets.REGISTRY_UN }}  # Username for the registry
+      REGISTRY_PW: ${{ secrets.REGISTRY_PW }}  # Password for the registry
 
     steps:
-      
-      # Checks-out your repository under $GITHUB_WORKSPACE.
-      - uses: actions/checkout@v4
+      # Checks out your repository under $GITHUB_WORKSPACE.
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      #
       # Builds the Docker image.
-      #
       - name: Build
-        run: ./scripts/build-image.sh
+        run: |
+          chmod +x ./scripts/build-image.sh
+          ./scripts/build-image.sh  # Execute the build script
 
-      #
       # Publishes the Docker image to the container registry.
-      #
       - name: Publish
-        run: ./scripts/push-image.sh
+        run: |
+          chmod +x ./scripts/push-image.sh
+          ./scripts/push-image.sh  # Execute the publish script
 
-      #
       # Installs Kubectl and connects it to the cluster.
-      #
-      # https://github.com/marketplace/actions/kubernetes-cli-kubectl
-      #
-      - uses: tale/kubectl-action@v1
+      - name: Set up kubectl
+        uses: tale/kubectl-action@v1
         with:
           base64-kube-config: ${{ secrets.KUBE_CONFIG }}
           kubectl-version: v1.30.4
       
-      #
       # Expands the configuration template and deploys the microservice.
-      #
       - name: Deploy
-        run: ./scripts/deploy.sh
+        run: |
+          chmod +x ./scripts/deploy.sh
+          ./scripts/deploy.sh  # Execute the deploy script
+
